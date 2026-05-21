@@ -22,7 +22,20 @@ return {
 
 		if action == "dedup" then
 			local cwd = get_cwd()
-			local child = Command("ftidy"):arg("dedup"):arg(cwd)
+
+			-- Ask user which keep strategy to use
+			local idx = ya.which({
+				cands = {
+					{ on = "o", desc = "keep oldest (default)" },
+					{ on = "n", desc = "keep newest" },
+					{ on = "p", desc = "keep by path" },
+				},
+			})
+			if not idx then return end
+			local strategies = { "oldest", "newest", "path" }
+			local keep = strategies[idx]
+
+			local child = Command("ftidy"):arg("dedup"):arg(cwd):arg("--keep"):arg(keep)
 				:stdout(Command.PIPED):stderr(Command.PIPED):output()
 
 			if not child then
@@ -44,7 +57,7 @@ return {
 			})
 
 			if yes then
-				local del = Command("ftidy"):arg("dedup"):arg(cwd):arg("--delete")
+				local del = Command("ftidy"):arg("dedup"):arg(cwd):arg("--keep"):arg(keep):arg("--delete")
 					:stdin(Command.PIPED):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
 				del:write_all("y\n")
 				del:flush()
