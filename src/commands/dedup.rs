@@ -1,3 +1,4 @@
+use crate::KeepStrategy;
 use anyhow::{Context, Result};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -6,7 +7,7 @@ use std::io::{self, BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-pub fn dedup(path: &Path, delete: bool) -> Result<()> {
+pub fn dedup(path: &Path, delete: bool, keep: &KeepStrategy) -> Result<()> {
     let mut size_map: HashMap<u64, Vec<PathBuf>> = HashMap::new();
 
     for entry in WalkDir::new(path).follow_links(false) {
@@ -22,19 +23,25 @@ pub fn dedup(path: &Path, delete: bool) -> Result<()> {
     }
 
     let mut dupes: Vec<(PathBuf, PathBuf)> = Vec::new();
-    for files in size_map.values_mut() {
+    for files in size_map.values() {
         if files.len() < 2 {
             continue;
         }
-        files.sort();
-        let mut seen: HashMap<String, PathBuf> = HashMap::new();
-        for file_path in files.iter() {
+        let mut hash_groups: HashMap<String, Vec<PathBuf>> = HashMap::new();
+        for file_path in files {
             let hash = hash_file(file_path)
                 .with_context(|| format!("failed to hash {}", file_path.display()))?;
-            if let Some(original) = seen.get(&hash) {
-                dupes.push((file_path.clone(), original.clone()));
-            } else {
-                seen.insert(hash, file_path.clone());
+            hash_groups.entry(hash).or_default().push(file_path.clone());
+        }
+        for group in hash_groups.values() {
+            if group.len() < 2 {
+                continue;
+            }
+            let keeper = pick_keeper(group, keep)?;
+            for f in group {
+                if f != &keeper {
+                    dupes.push((f.clone(), keeper.clone()));
+                }
             }
         }
     }
@@ -67,6 +74,35 @@ pub fn dedup(path: &Path, delete: bool) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn pick_keeper(group: &[PathBuf], strategy: &KeepStrategy) -> Result<PathBuf> {
+    match strategy {
+        KeepStrategy::Path => {
+            let mut sorted = group.to_vec();
+            sorted.sort();
+            Ok(sorted.into_iter().next().unwrap())
+        }
+        KeepStrategy::Oldest => pick_by_mtime(group, false),
+        KeepStrategy::Newest => pick_by_mtime(group, true),
+    }
+}
+
+fn pick_by_mtime(group: &[PathBuf], newest: bool) -> Result<PathBuf> {
+    let mut best: Option<(PathBuf, std::time::SystemTime)> = None;
+    for p in group {
+        let mtime = fs::metadata(p)?.modified()?;
+        let dominated = match &best {
+            None => true,
+            Some((_, t)) => {
+                if newest { mtime > *t } else { mtime < *t }
+            }
+        };
+        if dominated {
+            best = Some((p.clone(), mtime));
+        }
+    }
+    Ok(best.unwrap().0)
 }
 
 fn hash_file(path: &Path) -> Result<String> {
