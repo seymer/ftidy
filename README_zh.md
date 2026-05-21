@@ -45,6 +45,32 @@ ftidy rename *.jpg -p "vacation_{n}"
 - 执行前检测目标文件冲突
 - 失败时自动回滚已重命名的文件
 
+## Yazi 集成
+
+ftidy 附带 [Yazi](https://yazi-rs.github.io) 插件，可在文件管理器中直接去重和重命名。
+
+### 安装插件
+
+```sh
+cp -r yazi-plugin/ftidy.yazi ~/.config/yazi/plugins/
+```
+
+### 快捷键
+
+在 `~/.config/yazi/keymap.toml` 中添加：
+
+```toml
+[[mgr.prepend_keymap]]
+on  = ["f", "d"]
+run = "plugin ftidy dedup"
+desc = "ftidy: 去重当前目录文件"
+
+[[mgr.prepend_keymap]]
+on  = ["f", "r"]
+run = "plugin ftidy rename"
+desc = "ftidy: 批量重命名选中文件"
+```
+
 ## 许可证
 
 MIT

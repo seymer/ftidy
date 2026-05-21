@@ -1,5 +1,7 @@
 # ftidy
 
+[中文文档](README_zh.md)
+
 File tidying tool: deduplicate and batch rename.
 
 ## Install
@@ -34,6 +36,33 @@ Template variables:
 - `{ext}` — original extension
 
 If the pattern doesn't contain a `.`, the original extension is preserved.
+
+## Yazi Integration
+
+ftidy ships with a [Yazi](https://yazi-rs.github.io) plugin for in-file-manager dedup and rename.
+
+### Install plugin
+
+```sh
+# Copy plugin to yazi config
+cp -r yazi-plugin/ftidy.yazi ~/.config/yazi/plugins/
+```
+
+### Keybindings
+
+Add to your `~/.config/yazi/keymap.toml`:
+
+```toml
+[[mgr.prepend_keymap]]
+on  = ["f", "d"]
+run = "plugin ftidy dedup"
+desc = "ftidy: deduplicate files in current directory"
+
+[[mgr.prepend_keymap]]
+on  = ["f", "r"]
+run = "plugin ftidy rename"
+desc = "ftidy: batch rename selected files"
+```
 
 ## License
 
