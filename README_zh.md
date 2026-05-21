@@ -61,12 +61,12 @@ cp -r yazi-plugin/ftidy.yazi ~/.config/yazi/plugins/
 
 ```toml
 [[mgr.prepend_keymap]]
-on  = ["f", "d"]
+on  = ["t", "d"]
 run = "plugin ftidy dedup"
 desc = "ftidy: 去重当前目录文件"
 
 [[mgr.prepend_keymap]]
-on  = ["f", "r"]
+on  = ["t", "r"]
 run = "plugin ftidy rename"
 desc = "ftidy: 批量重命名选中文件"
 ```
