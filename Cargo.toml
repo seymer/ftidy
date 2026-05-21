@@ -5,7 +5,7 @@ edition = "2021"
 description = "File tidying tool: dedup, rename, and organize"
 
 [dependencies]
-clap = { version = "4.5", features = ["derive"] }
-anyhow = "1.0"
-sha2 = "0.10"
-walkdir = "2.5"
+clap = { version = "=4.6.1", features = ["derive"] }
+anyhow = "=1.0.102"
+sha2 = "=0.10.9"
+walkdir = "=2.5.0"
