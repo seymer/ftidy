@@ -55,12 +55,12 @@ Add to your `~/.config/yazi/keymap.toml`:
 ```toml
 [[mgr.prepend_keymap]]
 on  = ["t", "d"]
-run = "plugin ftidy dedup"
+run = "plugin ftidy -- dedup"
 desc = "ftidy: deduplicate files in current directory"
 
 [[mgr.prepend_keymap]]
 on  = ["t", "r"]
-run = "plugin ftidy rename"
+run = "plugin ftidy -- rename"
 desc = "ftidy: batch rename selected files"
 ```
 
